@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title></title>
+	<link rel="stylesheet" href="">
+</head>
+<body>
+	<div style="width: 50%;">
+		<h2>Enter Text with HTML content:</h2>
+		<textarea type="text" name="text" id="text" rows="12" cols="70"></textarea>
+	</div>	
+	<div style="width: 50%;">
+		<h2>Output:</h2>
+		<textarea type="text" name="text" id="text1" rows="12" cols="70"></textarea>
+	</div>
+	<br />
+	<button class="button" type="button">Sanitize</button>
+	<script src="https://code.jquery.com/jquery-3.5.1.min.js" integrity="sha256-9/aliU8dGd2tb6OSsuzixeV4y/faTqgFtohetphbbj0=" crossorigin="anonymous"></script>
+	<script>
+		$(document).ready(function(){
+			$(".button").click(function(){
+				strip_html_tags();
+								
+			});
+			
+			function strip_html_tags() {
+			   	let str = $("#text").val();			
+				var validHTMLTags = new Map([
+					["p", ["style", "class", "align"]],
+					["div", ["style", "class", "align"]],
+					["span", ["style", "class"]],
+					["br", ["style", "class"]],
+					["hr", ["style", "class"]],
+					["label", ["style", "class"]],
+					["h1", ["style", "class"]],
+					["h2", ["style", "class"]],
+					["h3", ["style", "class"]],
+					["h4", ["style", "class"]],
+					["h5", ["style", "class"]],
+					["h6", ["style", "class"]],
+					["font", ["style", "class", "color", "face", "size"]],
+					["strong", ["style", "class"]],
+					["b", ["style", "class"]],
+					["em", ["style", "class"]],
+					["i", ["style", "class"]],
+					["u", ["style", "class"]],
+					["strike", ["style", "class"]],
+					["ol", ["style", "class"]],
+					["ul", ["style", "class"]],
+					["li", ["style", "class"]],
+					["blockquote", ["style", "class"]],
+					["code", ["style", "class"]],
+					["a", ["style", "class", "href", "title", "target"]],
+					["img", ["style", "class", "src", "height", "width", "alt", "title", "hspace", "vspace", "border"]],
+					["table", ["style", "class"]],
+					["thead", ["style", "class"]],
+					["tbody", ["style", "class"]],
+					["tfoot", ["style", "class"]],
+					["th", ["style", "class", "scope"]],
+					["tr", ["style", "class"]],
+					["td", ["style", "class", "colspan"]],
+					["q", ["style", "class", "cite"]],
+					["cite", ["style", "class"]],
+					["abbr", ["style", "class"]],
+					["acronym", ["style", "class"]],
+					["del", ["style", "class"]],
+					["ins", ["style", "class"]]
+				]);
+					
+					if ((str === null) || (str === '')) {
+			   			alert("Empty String")
+			       		return false;
+			       	}
+				  	else {
+				   		str = str.toString();
+						//var reg = /</?\w+[^>]*>(.*?)<\s*/\w+>/g
+						var tags = str.match(/<\w+[^>]*>/g);
+						tags.forEach(tag => {							
+							var santitizeTag = "<";						
+							var tagName = tag.match(/<\w+/g).toString().substring(1).toLowerCase();
+							santitizeTag += tagName;
+							if (validHTMLTags.has(tagName)) {								
+								var tagAttributes = validHTMLTags.get(tagName);		
+								if (matchAttributes(tagAttributes, tag) === "") {		
+									santitizeTag += matchAttributes(tagAttributes, tag);
+								} else {									
+									santitizeTag += (' ' + matchAttributes(tagAttributes, tag));
+								}
+							} 
+							santitizeTag += ">";	
+							str = str.replace(tag, santitizeTag);									
+						});	
+						$("#text1").val(str);							
+						return str.replace(/<[^>]*>/g, '');
+				  	}				  	
+				};
+				
+				function matchAttributes(tagAttributes, tag) {
+					var output = "";
+					if (tag.match(/\w+\s*=\s*"(.*?\w+.*?)?"|\w+\s*='(.*?\w+.*?)?'/g) !== null) {
+						var attrs = tag.match(/\w+\s*=\s*"(.*?\w+.*?)?"|\w+\s*='(.*?\w+.*?)?'/g);
+						attrs.forEach(attr => {
+							var attrPair = attr.split("=");
+							var attrName = attrPair[0];
+							var attrValue = attrPair[1];
+							if (tagAttributes.includes(attrName)) {								
+								switch (attrName) {
+									case "src":
+									case "href":
+									if (attrValue.match("https?://[^\"]+") !== null) {                           
+										output += attrName + '=' + attrValue + ' ';
+									}
+									break;
+									default:
+										output += attrName + '=' + attrValue + ' ';
+									break;
+								}
+							}	
+						});
+					}
+					return output;
+				};
+			
+		});
+	</script>
+</body>
+</html>
